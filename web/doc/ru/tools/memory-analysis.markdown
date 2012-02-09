@@ -111,12 +111,10 @@ interface). Агент открывает сетевой сокет и отве�
 
 Программа `heap_dump` берется [на страничке соответствующего проекта](https://github.com/evanphx/heap_dump).
 
-This tool reads the heap dump file and outputs some useful information in 3 columns
-corresponding to the number of objects visible in the heap, the object's class, and
-the total number of bytes consumed by all instances of this object.
+Утилита читает дамп и выводит полезную информацию тремя колонками: количество видимых в куче объектов, класс 
+этих объектов, и суммарное число байт, занятое всеми экземплярами объекта.
 
-Running the tool against a heap dump captured from our `leak.rb` program, it gives us
-a small hint as to where the leak resides. The output is edited for length.
+Напустив утилитку на дамп, выгруженный из нашей `leak.rb`, мы получаем тонкий намек на местоположение интересующей нас утечки (вывод отредактирован, чтобы он поместился на странице).
 
     $ rbx -I /path/to/heap_dump/lib /path/to/heap_dump/bin/histo.rb heap.dump 
         169350   Rubinius::CompactLookupTable 21676800
@@ -134,16 +132,11 @@ a small hint as to where the leak resides. The output is edited for length.
             12                   FFI::Pointer 480
              2                    ZMQ::Socket 96
 
-Nothing listed looks too outrageous in this example. However, a few things are notable.
+В принципе, в нашем примере нет чего-либо очень уж экстраординарного, однако некоторые странности заметны.
 
-1. The largest footprint is consumed by `Rubinius::CompactLookupTable` which is a 
-class that the example code never directly instantiates and weighs in at about 20MB. 
-So, some internal Rubinius structures are reported by the heap dump. It is 
-interesting but doesn't help pinpoint our particular leak.
+1. Наибольшее место заняли объекты `Rubinius::CompactLookupTable`, класса, который написанный нами код напрямую не инстанциирует --- около 20 мегабайт. То есть, некоторые внутренности Rubinius отображаются в анализе дампа. Факт интересный, но в выявлении нашей утечки он не поможет.
 
-2. The `ZMQ::Message` class listed on line 3 is the first class shown that the example
-code directly instantiates. There are nearly 170k instances, so this is likely our
-leak.
+2. Класс `ZMQ::Message` на третьей строчке --- первый из тех, экземпляры которого наш код непосредственно создает. Этих экземпляров набралось аж 170 тысяч, так что это и может быть местом утечки.
 
 Sometimes a single snapshot is insufficient to pinpoint a leak. In that situation
 one should take several snapshots of the heap at different times and let the

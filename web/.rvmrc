@@ -1,1 +1,1 @@
-rvm use rbx@rubini.us
+rvm --create use rbx@rubini.us
